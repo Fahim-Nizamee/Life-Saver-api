@@ -108,13 +108,14 @@ app.post('/signup', async (req, res) => {
                 bloodgroup,
                 donor,
                 city,
-                address,
+                address, 
                 email,
                 password,
                 phone
             })
             res.send('Successfully registered')
         }
+        console.log(err)
     })
 })
 
