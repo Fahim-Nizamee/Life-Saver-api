@@ -51,7 +51,7 @@ const userSchema = new mongoose.Schema({
         required: true
     },
     donor: {
-      type: String,
+        type: String,
     },
     date: {
         type: Date,
@@ -63,8 +63,13 @@ const User = new mongoose.model("users", userSchema)
 
 const postSchema = new mongoose.Schema({
 
+    username:{
+        type:String,
+        required:true
+    },
     userEmail: {
         type: String,
+        required:true
     },
     postDescription: {
         type: String,
@@ -108,7 +113,7 @@ app.post('/signup', async (req, res) => {
                 bloodgroup,
                 donor,
                 city,
-                address, 
+                address,
                 email,
                 password,
                 phone
@@ -126,8 +131,8 @@ app.post('/login', async (req, res) => {
         if (user) {
             console.log(user)
             if (user.password === password) {
-                
-                res.send({ message: 'success', username: user.username })
+
+                res.send({ message: 'success', username: user.username, email: user.email })
             }
             else {
                 res.send('wrong pass')
@@ -139,6 +144,48 @@ app.post('/login', async (req, res) => {
     })
 
 })
+
+app.post('/post', async (req, res) => {
+    console.log(req.body)
+    const { username,userEmail, postDescription, bloodgroup, city, phone } = req.body
+    User.findOne({ email: userEmail }, async (err, user) => {
+        if (user) {
+            await Post.create({
+                username,
+                userEmail,
+                postDescription,
+                bloodgroup,
+                city,
+                phone
+            })
+            res.send({ message: 'success' })
+        }
+        else{
+            res.send({ message: 'wrong'})
+        }
+    })
+
+
+})
+
+app.get('/get-post',async(req,res)=>{
+    const fatchedPost = await await mongoose.connection.db.collection("posts")
+    fatchedPost.find({}).toArray(function(err,data){
+        if(!err)
+        {
+            res.send(data)
+        } 
+    })
+})
+
+app.delete('/post-delete/:id([0-9a-fA-F]{24})', async (req, res) => {
+    const id = req.params.id.trim()
+    const query = { _id: new ObjectId(id) }
+    const result = await mongoose.connection.db.collection("posts").deleteOne(query)
+    res.send('success')
+})
+
+
 
 app.listen(port, () => {
     console.log(`Server running on port ${port}`)
