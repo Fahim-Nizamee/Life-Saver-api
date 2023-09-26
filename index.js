@@ -145,6 +145,55 @@ app.post('/login', async (req, res) => {
 
 })
 
+
+const adminSchema = new mongoose.Schema({
+    username: {
+        type: String,
+        required: true
+    },
+    email: {
+        type: String,
+        required: true
+    },
+    password: {
+        type: String,
+        required: true
+    },
+    phone: {
+        type: String,
+        required: true
+    },
+    date: {
+        type: Date,
+        default: Date.now
+    },
+})
+
+const Admin = new mongoose.model("admins", adminSchema)
+
+app.post('/admin-login', async (req, res) => {
+    console.log(req.body)
+    const { email, password } = req.body
+    Admin.findOne({ email: email }, async (err, user) => {
+        if (user) {
+            console.log(user)
+            if (user.password === password) {
+
+                res.send({ message: 'success', username: user.username, email: user.email })
+            }
+            else {
+                res.send('wrong pass')
+            }
+        }
+        else {
+            res.send('wrong mail')
+        }
+    })
+
+})
+
+
+
 app.post('/post', async (req, res) => {
     console.log(req.body)
     const { username,userEmail, postDescription, bloodgroup, city, phone } = req.body
@@ -169,12 +218,12 @@ app.post('/post', async (req, res) => {
 })
 
 app.get('/get-post',async(req,res)=>{
-    const fatchedPost = await await mongoose.connection.db.collection("posts")
+    const fatchedPost = await mongoose.connection.db.collection("posts")
     fatchedPost.find({}).toArray(function(err,data){
         if(!err)
         {
             res.send(data)
-        } 
+        }  
     })
 })
 
@@ -186,6 +235,65 @@ app.delete('/post-delete/:id([0-9a-fA-F]{24})', async (req, res) => {
 })
 
 
+const donorSchema = new mongoose.Schema({
+    username: {
+        type: String,
+        required: true
+    },
+    email: {
+        type: String,
+        required: true
+    },
+    city: {
+        type: String,
+        required: true
+    },
+    bloodgroup: {
+        type: String,
+        required: true
+    },
+    phone: {
+        type: String,
+        required: true
+    },
+    date: {
+        type: Date,
+        default: Date.now
+    },
+})
+
+const Donor = new mongoose.model("donors", donorSchema)
+
+app.post('/add-donor', async (req, res) => {
+    console.log(req.body)
+    const { username, city, email, phone, bloodgroup } = req.body
+    Donor.findOne({ email: email }, async (err, user) => {
+        if (user) {
+            res.send({ message: 'User already registered' })
+        }
+        else {
+            await Donor.create({
+                username,
+                bloodgroup,
+                city, 
+                email,
+                phone
+            })
+            res.send('Successfully registered')
+        }
+        console.log(err)
+    })
+})
+
+app.get('/get-donor',async(req,res)=>{
+    const fatchedPost = await mongoose.connection.db.collection("donors")
+    fatchedPost.find({}).toArray(function(err,data){
+        if(!err)
+        {
+            res.send(data)
+        } 
+    })
+})
 
 app.listen(port, () => {
     console.log(`Server running on port ${port}`)
