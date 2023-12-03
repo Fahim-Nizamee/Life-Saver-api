@@ -63,13 +63,13 @@ const User = new mongoose.model("users", userSchema)
 
 const postSchema = new mongoose.Schema({
 
-    username:{
-        type:String,
-        required:true
+    username: {
+        type: String,
+        required: true
     },
     userEmail: {
         type: String,
-        required:true
+        required: true
     },
     postDescription: {
         type: String,
@@ -196,7 +196,7 @@ app.post('/admin-login', async (req, res) => {
 
 app.post('/post', async (req, res) => {
     console.log(req.body)
-    const { username,userEmail, postDescription, bloodgroup, city, phone } = req.body
+    const { username, userEmail, postDescription, bloodgroup, city, phone } = req.body
     User.findOne({ email: userEmail }, async (err, user) => {
         if (user) {
             await Post.create({
@@ -209,23 +209,31 @@ app.post('/post', async (req, res) => {
             })
             res.send({ message: 'success' })
         }
-        else{
-            res.send({ message: 'wrong'})
+        else {
+            res.send({ message: 'wrong' })
         }
     })
 
 
 })
 
-app.get('/get-post',async(req,res)=>{
-    const fatchedPost = await mongoose.connection.db.collection("posts")
-    fatchedPost.find({}).toArray(function(err,data){
-        if(!err)
-        {
-            res.send(data)
-        }  
-    })
-})
+app.get('/get-post', async (req, res) => {
+    const fatchedPost = await mongoose.connection.db.collection("posts");
+    const fatchedDonors = mongoose.connection.db.collection("donors");
+
+    try {
+        const postData = await fatchedPost.find({}).toArray();
+        const donorsData = await fatchedDonors.find({}).toArray();
+
+        const length = donorsData.length;
+        console.log(length);
+
+        res.send([postData, length]);
+    } catch (error) {
+        console.error(error);
+        res.status(500).send("Internal Server Error");
+    }
+});
 
 app.delete('/post-delete/:id([0-9a-fA-F]{24})', async (req, res) => {
     const id = req.params.id.trim()
@@ -275,7 +283,7 @@ app.post('/add-donor', async (req, res) => {
             await Donor.create({
                 username,
                 bloodgroup,
-                city, 
+                city,
                 email,
                 phone
             })
@@ -285,13 +293,12 @@ app.post('/add-donor', async (req, res) => {
     })
 })
 
-app.get('/get-donor',async(req,res)=>{
+app.get('/get-donor', async (req, res) => {
     const fatchedPost = await mongoose.connection.db.collection("donors")
-    fatchedPost.find({}).toArray(function(err,data){
-        if(!err)
-        {
+    fatchedPost.find({}).toArray(function (err, data) {
+        if (!err) {
             res.send(data)
-        } 
+        }
     })
 })
 
