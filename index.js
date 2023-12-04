@@ -38,6 +38,14 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    latitude: {
+        type: String,
+        required: true
+    },
+    longitude: {
+        type: String,
+        required: true
+    },
     email: {
         type: String,
         required: true
@@ -100,7 +108,7 @@ const Post = new mongoose.model("posts", postSchema)
 
 app.post('/signup', async (req, res) => {
     console.log(req.body)
-    const { username, city, address, email, password, phone } = req.body
+    const { username, city, address, email, password, phone,longitude,latitude } = req.body
     const bloodgroup = "null"
     const donor = "false"
     User.findOne({ email: email }, async (err, user) => {
@@ -116,7 +124,10 @@ app.post('/signup', async (req, res) => {
                 address,
                 email,
                 password,
-                phone
+                phone,
+                longitude,
+                latitude
+
             })
             res.send('Successfully registered')
         }
@@ -144,6 +155,20 @@ app.post('/login', async (req, res) => {
     })
 
 })
+
+app.get('/get-user', async (req, res) => {
+
+    const { email} = req.body
+    User.findOne({ email: email }, async (err, user) => {
+        if (user) {
+            console.log(user)
+            res.send({ message: 'success', username: user.username, email: user.email, city: user.city, address: user.address, phone: user.phone, longitude: user.longitude, latitude: user.latitude })
+        }
+        else {
+            res.send('no data')
+        }
+    })
+});
 
 
 const adminSchema = new mongoose.Schema({
@@ -249,6 +274,14 @@ const donorSchema = new mongoose.Schema({
         required: true
     },
     email: {
+        type: String,
+        required: true
+    },
+    latitude: {
+        type: String,
+        required: true
+    },
+    longitude: {
         type: String,
         required: true
     },
