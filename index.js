@@ -108,7 +108,7 @@ const Post = new mongoose.model("posts", postSchema)
 
 app.post('/signup', async (req, res) => {
     console.log(req.body)
-    const { username, city, address, email, password, phone,longitude,latitude } = req.body
+    const { username, city, address, email, password, phone, longitude, latitude } = req.body
     const bloodgroup = "null"
     const donor = "false"
     User.findOne({ email: email }, async (err, user) => {
@@ -143,7 +143,7 @@ app.post('/login', async (req, res) => {
             console.log(user)
             if (user.password === password) {
 
-                res.send({ message: 'success', username: user.username, email: user.email })
+                res.send({ message: 'success', username: user.username, email: user.email,donor:user.donor })
             }
             else {
                 res.send('wrong pass')
@@ -156,19 +156,62 @@ app.post('/login', async (req, res) => {
 
 })
 
-app.get('/get-user', async (req, res) => {
+app.post('/get-user', async (req, res) => {
 
-    const { email} = req.body
+    const { email } = req.body
+    console.log(req.body)
     User.findOne({ email: email }, async (err, user) => {
         if (user) {
             console.log(user)
-            res.send({ message: 'success', username: user.username, email: user.email, city: user.city, address: user.address, phone: user.phone, longitude: user.longitude, latitude: user.latitude })
+            res.send({ message: 'success', username: user.username, email: user.email, city: user.city, address: user.address, phone: user.phone, longitude: user.longitude, latitude: user.latitude, bloodgroup: user.bloodgroup ,donor:user.donor})
         }
         else {
             res.send('no data')
         }
     })
 });
+app.post('/donor-update', async (req, res) => {
+    const { username, city, address, email, phone, longitude, latitude, bloodgroup } = req.body;
+    console.log(req.body);
+
+    const filter = { email: email };
+    const options = { upsert: true };
+    const updateDoc = {
+        $set: {
+            username: username,
+            city: city,
+            address: address,
+            // email:email,
+            phone: phone,
+            longitude: longitude,
+            latitude: latitude,
+            bloodgroup: bloodgroup,
+            donor: 'true',
+        },
+    };
+
+    try {
+        const result = await mongoose.connection.db.collection("users").updateOne(
+            filter,
+            updateDoc,
+            options,
+        );
+
+        if (result.upsertedCount > 0 || result.modifiedCount > 0) {
+            console.log('Update successful for', email);
+            res.send('success');
+        } else {
+            console.log('No matching user found for', email);
+            res.status(404).send('User not found');
+        }
+    } catch (error) {
+        console.error('Error updating user:', error);
+        res.status(500).send('Internal Server Error');
+    }
+
+
+});
+
 
 
 const adminSchema = new mongoose.Schema({
@@ -327,13 +370,26 @@ app.post('/add-donor', async (req, res) => {
 })
 
 app.get('/get-donor', async (req, res) => {
-    const fatchedPost = await mongoose.connection.db.collection("donors")
-    fatchedPost.find({}).toArray(function (err, data) {
-        if (!err) {
-            res.send(data)
-        }
-    })
-})
+    try {
+        const donors = await mongoose.connection.db.collection("users").find({ donor: 'true' }).toArray();
+        res.send(donors);
+    } catch (error) {
+        console.error('Error fetching donor data:', error);
+        res.status(500).send('Internal Server Error');
+    }
+});
+
+app.get('/get-donor-loc', async (req, res) => {
+    try {
+        const donors = await mongoose.connection.db.collection("users").find({ donor: 'true' }).toArray();
+        res.send(donors);
+    } catch (error) {
+        console.error('Error fetching donor data:', error);
+        res.status(500).send('Internal Server Error');
+    }
+});
+
+
 
 app.listen(port, () => {
     console.log(`Server running on port ${port}`)
