@@ -212,6 +212,47 @@ app.post('/donor-update', async (req, res) => {
 
 });
 
+app.post('/donor-delete', async (req, res) => {
+    const { id, username, bloodgroup,city,address,latitude,longitude,email,phone,donor  } = req.body;
+    console.log(req.body);
+
+    const filter = { _id: new ObjectId(id)};
+    const options = { upsert: true };
+    const updateDoc = {
+        $set: {
+            username: username,
+            city: city,
+            address: address,
+            phone: phone,
+            longitude: longitude,
+            latitude: latitude,
+            bloodgroup: 'null',
+            donor: 'false',
+        },
+    };
+
+    try {
+        const result = await mongoose.connection.db.collection("users").updateOne(
+            filter,
+            updateDoc,
+            options,
+        );
+
+        if (result.upsertedCount > 0 || result.modifiedCount > 0) {
+            console.log('Update successful for', id);
+            res.send('success');
+        } else {
+            console.log('No matching user found for', id);
+            res.status(404).send('User not found');
+        }
+    } catch (error) {
+        console.error('Error updating user:', error);
+        res.status(500).send('Internal Server Error');
+    }
+
+
+});
+
 
 
 const adminSchema = new mongoose.Schema({
