@@ -143,7 +143,7 @@ app.post('/login', async (req, res) => {
             console.log(user)
             if (user.password === password) {
 
-                res.send({ message: 'success', username: user.username, email: user.email,donor:user.donor })
+                res.send({ message: 'success', username: user.username, email: user.email, donor: user.donor })
             }
             else {
                 res.send('wrong pass')
@@ -163,7 +163,7 @@ app.post('/get-user', async (req, res) => {
     User.findOne({ email: email }, async (err, user) => {
         if (user) {
             console.log(user)
-            res.send({ message: 'success', username: user.username, email: user.email, city: user.city, address: user.address, phone: user.phone, longitude: user.longitude, latitude: user.latitude, bloodgroup: user.bloodgroup ,donor:user.donor})
+            res.send({ message: 'success', username: user.username, email: user.email, city: user.city, address: user.address, phone: user.phone, longitude: user.longitude, latitude: user.latitude, bloodgroup: user.bloodgroup, donor: user.donor })
         }
         else {
             res.send('no data')
@@ -213,10 +213,10 @@ app.post('/donor-update', async (req, res) => {
 });
 
 app.post('/donor-delete', async (req, res) => {
-    const { id, username, bloodgroup,city,address,latitude,longitude,email,phone,donor  } = req.body;
+    const { id, username, bloodgroup, city, address, latitude, longitude, email, phone, donor } = req.body;
     console.log(req.body);
 
-    const filter = { _id: new ObjectId(id)};
+    const filter = { _id: new ObjectId(id) };
     const options = { upsert: true };
     const updateDoc = {
         $set: {
@@ -432,6 +432,79 @@ app.get('/get-donor-loc', async (req, res) => {
 
 
 
+const adSchema = new mongoose.Schema({
+    title: {
+        type: String,
+        required: true
+    },
+    description: {
+        type: String,
+        required: true
+    },
+    time: {
+        type: String,
+        required: true
+    },
+    location: {
+        type: String,
+        required: true
+    },
+    image: {
+        type: String,
+        required: true
+    },
+    date: {
+        type: String,
+        required: true
+    },
+})
+
+const Ads = new mongoose.model("ads", adSchema)
+
+app.post('/add-ads', async (req, res) => {
+    console.log(req.body)
+    const { title, description, time, location, image, date } = req.body
+    if (title && description && time && location && image && date) {
+        await Ads.create({
+            title,
+            description,
+            time,
+            location,
+            image,
+            date
+        })
+        res.send('success')
+    }
+})
+
+
+app.get('/ads-data', async (req, res) => {
+    const fetched_data = await mongoose.connection.db.collection("ads")
+
+    fetched_data.find({}).toArray(function (err, data) {
+
+        if (err) {
+            console.log(err)
+        }
+        else {
+
+            res.send(data)
+
+        }
+
+    })
+
+
+})
+
+app.delete('/delete-ad/:id([0-9a-fA-F]{24})', async (req, res) => {
+    const id = req.params.id.trim()
+    const query = { _id: new ObjectId(id) }
+    const result = await mongoose.connection.db.collection("ads").deleteOne(query)
+    res.send('success')
+})
+
+
 app.listen(port, () => {
-    console.log(`Server running on port ${port}`)
+    console.log(`Server running on port ${port}`)
 })
